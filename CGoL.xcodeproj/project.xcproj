@@ -11,8 +11,21 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "CGoL", "target-membership": [ "CGoL" ] },
     {
+      "kind": "folder",
+      "path": "CGoL",
+      "target-membership": [
+        "CGoL",
+      ],
+      "membership-exceptions": [
+        {
+          "build-phase": "CGoL/resources",
+          "inclusions": [
+            "Headers/Noise.h",
+          ],
+        },
+      ],
+    }, {
       "kind": "group",
       "name": "Products",
       "children": [
@@ -54,6 +67,7 @@
         "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
         "SWIFT_DEFAULT_ACTOR_ISOLATION": "MainActor",
         "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_OBJC_BRIDGING_HEADER[arch=*]": "CGoL/Headers/Shared.h",
         "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
         "SWIFT_VERSION": "5.0",
       },
