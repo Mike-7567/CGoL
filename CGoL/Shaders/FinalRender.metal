@@ -18,7 +18,6 @@ struct VertIn {
 
 struct VertOut {
     float4 position [[position]];
-    float4 color;
     float2 texcoords;
 };
 
@@ -30,7 +29,9 @@ vertex VertOut finalRenderVsh(VertIn in [[stage_in]]) {
 }
 
 fragment float4 finalRenderFsh(VertOut vert [[stage_in]], texture2d<float, access::sample> tempOutput [[texture(DataTextureIndex)]]) {
-    float3 color = tempOutput.sample(samp, vert.texcoords).rgb;
+    float amplifier = tempOutput.sample(samp, vert.texcoords).r;
+    
+    float3 color = float3(1.0 * vert.texcoords.x, 1.0 * vert.texcoords.y, 1.0 * (1.0 - vert.texcoords.y)) * amplifier;
     
     return float4(color, 1.);
 }
