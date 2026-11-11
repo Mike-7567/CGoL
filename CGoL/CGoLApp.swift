@@ -8,7 +8,7 @@
 import SwiftUI
 import simd
 
-let DEFAULT_SETTINGS = SettingsStruct(DataTextureSize: simd_int2(400, 200), addCells: 1, updateRate: 2)
+let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(400, 200), addCells: 0, updateRate: 2, strokeSize: 3.0)
 
 @main
 struct CGoLApp: App {
@@ -17,7 +17,7 @@ struct CGoLApp: App {
     init() {
         ComputePiplines.initialize()
         RenderPipelines.initialize()
-        Textures.initialize(size: settings.DataTextureSize)
+        Textures.initialize(size: settings.dataTextureSize)
     }
     
     var body: some Scene {

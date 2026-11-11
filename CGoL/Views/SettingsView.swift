@@ -23,6 +23,9 @@ struct SettingsView: View {
                     settings.updateRate -= 1
                 }
             }
-        }.padding()
+            Slider(value: $settings.strokeSize, in: 0...10) {
+                Text("Stroke size: \(settings.strokeSize)")
+            }
+        }.padding().frame(minWidth: 400, minHeight: 300)
     }
 }

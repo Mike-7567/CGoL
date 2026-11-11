@@ -9,12 +9,18 @@ import Metal
 
 class ComputePiplines {
     static private(set) var updateCells: MTLComputePipelineState!
+    static private(set) var stroke: MTLComputePipelineState!
     
     static func initialize() {
         let updateCellDescriptor = MTLComputePipelineDescriptor()
         updateCellDescriptor.computeFunction = LIBRARY.makeFunction(name: "updateCells")
         updateCellDescriptor.label = "Update cells pipeline state"
         updateCells = try! DEVICE.makeComputePipelineState(descriptor: updateCellDescriptor, options: []).0
+        
+        let strokeDescriptor = MTLComputePipelineDescriptor()
+        strokeDescriptor.computeFunction = LIBRARY.makeFunction(name: "addCellsFromStroke")
+        strokeDescriptor.label = "Stroke pipeline state"
+        stroke = try! DEVICE.makeComputePipelineState(descriptor: strokeDescriptor, options: []).0
     }
 }
 

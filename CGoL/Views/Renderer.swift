@@ -7,9 +7,10 @@
 
 import MetalKit
 
-class Renderer: NSObject, MTKViewDelegate {
+class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
     static private var frameCount: UInt32 = 0
     
+    private var strokes: [(simd_float2, simd_float2)] = []
     var settings = DEFAULT_SETTINGS
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -26,20 +27,40 @@ class Renderer: NSObject, MTKViewDelegate {
             return
         }
         
-        if (Renderer.frameCount % settings.updateRate == 0) {
-            guard let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
-                print("Failed to create compute encoder")
-                return
+        guard let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            print("Failed to create compute encoder")
+            return
+        }
+        computeEncoder.label = "Stroke and update kernel"
+        
+        if (!strokes.isEmpty) {
+            let maxStrokes = 30
+            let bottemBounds = max(0, strokes.count - maxStrokes)
+            var i = strokes.count - 1
+            while i >= bottemBounds {
+                let stroke = strokes[i]
+                computeEncoder.setComputePipelineState(ComputePiplines.stroke)
+                computeEncoder.setTexture(Textures.data, index: DataTextureIndex.rawValue)
+                computeEncoder.setSettings(settings)
+                
+                var strokeData = StrokeData(from: stroke.0, to: stroke.1)
+                computeEncoder.setBytes(&strokeData, length: MemoryLayout<StrokeData>.stride, index: StrokeDataIndex.rawValue)
+                computeEncoder.dispatchThreadgroups(MTLSize(width: Int(settings.dataTextureSize.x), height: Int(settings.dataTextureSize.y), depth: 1), threadsPerThreadgroup: .one)
+                i -= 1
             }
-            computeEncoder.label = "Update kernel"
+            
+            strokes = []
+        }
+        
+        if (Renderer.frameCount % settings.updateRate == 0) {
             computeEncoder.setComputePipelineState(ComputePiplines.updateCells)
             computeEncoder.setTexture(Textures.data, index: DataTextureIndex.rawValue)
             computeEncoder.setTexture(Textures.tempOutput, index: TempOutputIndex.rawValue)
             computeEncoder.setSettings(settings)
-            computeEncoder.dispatchThreadgroups(MTLSize(width: Int(settings.DataTextureSize.x), height: Int(settings.DataTextureSize.y), depth: 1), threadsPerThreadgroup: .one)
-            
-            computeEncoder.endEncoding()
+            computeEncoder.dispatchThreadgroups(MTLSize(width: Int(settings.dataTextureSize.x), height: Int(settings.dataTextureSize.y), depth: 1), threadsPerThreadgroup: .one)
         }
+        
+        computeEncoder.endEncoding()
         
         guard let blitEncoder = commandBuffer.makeBlitCommandEncoder() else {
             print("Failed to create blit encoder")
@@ -67,5 +88,54 @@ class Renderer: NSObject, MTKViewDelegate {
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
         Renderer.frameCount += 1
+    }
+    
+    func mouseDown(with event: NSEvent) {
+        
+    }
+    
+    func mouseDragged(with event: NSEvent) {
+        guard let view = event.window?.contentView?.subviews[0].subviews[0] else {
+            print("Could not get view")
+            return
+        }
+        
+        guard let mtkView = view as? MTKView else {
+            print("View was not a MTKView: \(type(of: view))")
+            return
+        }
+        
+        guard let viewPoint = mtkView.convert(event.locationInWindow, from: nil) as CGPoint? else {
+            print("Could not get start point")
+            return
+        }
+        
+        let from = texturePoint(from: viewPoint, texture: Textures.data, drawable: mtkView)
+        let to = texturePoint(from: CGPoint(x: viewPoint.x + event.deltaX, y: viewPoint.y + event.deltaY), texture: Textures.data, drawable: mtkView)
+        strokes.append((from, to))
+        print("\(from), \(to)")
+    }
+    
+    func mouseUp(with event: NSEvent) {
+        
+    }
+    
+    func mouseEntered(with event: NSEvent) {
+        
+    }
+    
+    func mouseExited(with event: NSEvent) {
+        
+    }
+    
+    func texturePoint(from viewPoint: CGPoint, texture: MTLTexture, drawable: MTKView) -> simd_float2 {
+        let viewSize = drawable.drawableSize
+        let texWidth  = Float(texture.width)
+        let texHeight = Float(texture.height)
+
+        let u = Float(viewPoint.x) / Float(viewSize.width) * 2
+        let v = Float(viewPoint.y) / Float(viewSize.height) * 2
+        
+        return simd_float2(u * texWidth, v * texHeight)
     }
 }

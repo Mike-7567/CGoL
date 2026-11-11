@@ -10,9 +10,15 @@
 #include "simd/simd.h"
 
 struct SettingsStruct {
-    simd_int2 DataTextureSize;
+    simd_int2 dataTextureSize;
     uint8_t addCells;
     uint32_t updateRate;
+    float strokeSize;
+};
+
+struct StrokeData {
+    simd_float2 from;
+    simd_float2 to;
 };
 
 enum TextureBufferIndicies {
@@ -21,7 +27,8 @@ enum TextureBufferIndicies {
 };
 
 enum DataBufferIndicies {
-    SettingsIndex = 1
+    SettingsIndex = 1,
+    StrokeDataIndex = 2
 };
 
 enum VertexAttributeIndicies {
