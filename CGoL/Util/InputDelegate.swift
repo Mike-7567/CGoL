@@ -8,7 +8,7 @@
 import Foundation
 import AppKit
 
-protocol MouseTrackingDelegate {
+protocol InputDelegate {
     func mouseDown(with event: NSEvent)
     
     func mouseDragged(with event: NSEvent)
@@ -18,4 +18,8 @@ protocol MouseTrackingDelegate {
     func mouseExited(with event: NSEvent)
     
     func mouseEntered(with event: NSEvent)
+    
+    func keyUp(with event: NSEvent)
+    
+    func keyDown(with event: NSEvent)
 }

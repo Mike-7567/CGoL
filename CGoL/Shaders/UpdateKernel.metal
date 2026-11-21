@@ -11,17 +11,7 @@ using namespace metal;
 #include "../Headers/Noise.h"
 
 kernel void updateCells(uint2 uindex [[ thread_position_in_grid ]], texture2d<float, access::read> dataTexture [[ texture(DataTextureIndex) ]], texture2d<float, access::write> tempOutput [[ texture(TempOutputIndex) ]], constant SettingsStruct &settings [[ buffer(SettingsIndex) ]]) {
-    if (settings.addCells == 1) {
-        //if ((uindex.x % 2) == 0 && (uindex.y % 2) == 0) {
-        //    tempOutput.write(1.0, uindex);
-        //    return;
-        //}
-        
-        float2 pos = float2(uindex.x, uindex.y);
-        float noise = round(goldNoise(pos, 1));
-        tempOutput.write(noise, uindex);
-        return;
-    }
+    
     int2 index = int2(uindex);
     int2 offsets[8] = {
         int2(1, 1),

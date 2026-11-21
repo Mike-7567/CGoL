@@ -17,6 +17,7 @@ kernel void addCellsFromStroke(uint2 uindex [[ thread_position_in_grid ]], textu
     float dis = sdSegment(p, strokeData.from, strokeData.to) - settings.strokeSize;
     
     if (dis <= 0) {
+        //float v = float(strokeData.rightClickMask);
         dataTexture.write(1.0, uindex);
     }
 }

@@ -21,6 +21,7 @@ class Textures {
         dataDescriptor.storageMode = .shared
         
         data = DEVICE.makeTexture(descriptor: dataDescriptor)
+        data.label = "Data Texture"
         
         let tempOutputDescriptor = MTLTextureDescriptor()
         tempOutputDescriptor.width = Int(size.x)
@@ -30,6 +31,7 @@ class Textures {
         tempOutputDescriptor.storageMode = .shared
         
         tempOutput = DEVICE.makeTexture(descriptor: tempOutputDescriptor)
+        tempOutput.label = "Temp Texture"
     }
     
     static func resetTextures(size: simd_int2) {

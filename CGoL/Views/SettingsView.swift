@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct SettingsView: View {
     @State private var addCells = true
@@ -13,9 +14,6 @@ struct SettingsView: View {
     
     var body: some View {
         VStack {
-            Toggle("Add cells", isOn: $addCells).onChange(of: addCells) {
-                settings.addCells = addCells ? 1 : 0
-            }
             Stepper("Update Rate \(settings.updateRate)") {
                 settings.updateRate += 1
             } onDecrement: {
@@ -26,6 +24,13 @@ struct SettingsView: View {
             Slider(value: $settings.strokeSize, in: 0...10) {
                 Text("Stroke size: \(settings.strokeSize)")
             }
+            //Button("Reset size") {
+            //    guard let size = NSScreen.main?.frame else {
+            //        print("Could not get main screen frame")
+            //        return
+            //    }
+            //    Textures.resetTextures(size: simd_int2(Int32(size.width), Int32(size.height)))
+            //}
         }.padding().frame(minWidth: 400, minHeight: 300)
     }
 }

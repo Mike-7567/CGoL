@@ -9,9 +9,14 @@
 #define Shared_h
 #include "simd/simd.h"
 
+enum GameState {
+    Running = 0,
+    Paused = 1
+};
+
 struct SettingsStruct {
     simd_int2 dataTextureSize;
-    uint8_t addCells;
+    enum GameState state;
     uint32_t updateRate;
     float strokeSize;
 };
@@ -19,6 +24,7 @@ struct SettingsStruct {
 struct StrokeData {
     simd_float2 from;
     simd_float2 to;
+    uint8_t rightClickMask;
 };
 
 enum TextureBufferIndicies {

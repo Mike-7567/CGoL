@@ -14,11 +14,11 @@ struct SimulationView: NSViewRepresentable {
     @Binding var settings: SettingsStruct
     
     func makeNSView(context: Context) -> some NSView {
-        let view = MTKMouseTrackingView()
+        let view = MTKInputView()
         
         view.device = DEVICE
+        view.inputDelegate = renderer
         view.delegate = renderer
-        view.mouseDelegate = renderer
         view.preferredFramesPerSecond = 60
         view.colorPixelFormat = MAIN_COLOR_FORMAT
         view.clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)

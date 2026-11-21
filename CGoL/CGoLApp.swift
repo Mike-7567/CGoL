@@ -8,7 +8,7 @@
 import SwiftUI
 import simd
 
-let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(400, 200), addCells: 0, updateRate: 2, strokeSize: 3.0)
+let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(750, 500), state: Running, updateRate: 2, strokeSize: 3.0)
 
 @main
 struct CGoLApp: App {

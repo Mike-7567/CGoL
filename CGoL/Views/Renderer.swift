@@ -7,10 +7,10 @@
 
 import MetalKit
 
-class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
+class Renderer: NSObject, MTKViewDelegate, InputDelegate {
     static private var frameCount: UInt32 = 0
     
-    private var strokes: [(simd_float2, simd_float2)] = []
+    private var strokes: [StrokeData] = []
     var settings = DEFAULT_SETTINGS
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -33,8 +33,10 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
         }
         computeEncoder.label = "Stroke and update kernel"
         
+        strokes.append(StrokeData(from: .zero, to: .one, rightClickMask: 0))
+        
         if (!strokes.isEmpty) {
-            let maxStrokes = 30
+            let maxStrokes = 40
             let bottemBounds = max(0, strokes.count - maxStrokes)
             var i = strokes.count - 1
             while i >= bottemBounds {
@@ -43,7 +45,7 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
                 computeEncoder.setTexture(Textures.data, index: DataTextureIndex.rawValue)
                 computeEncoder.setSettings(settings)
                 
-                var strokeData = StrokeData(from: stroke.0, to: stroke.1)
+                var strokeData = stroke
                 computeEncoder.setBytes(&strokeData, length: MemoryLayout<StrokeData>.stride, index: StrokeDataIndex.rawValue)
                 computeEncoder.dispatchThreadgroups(MTLSize(width: Int(settings.dataTextureSize.x), height: Int(settings.dataTextureSize.y), depth: 1), threadsPerThreadgroup: .one)
                 i -= 1
@@ -52,7 +54,9 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
             strokes = []
         }
         
-        if (Renderer.frameCount % settings.updateRate == 0) {
+        let updateFrame = settings.state == Running && Renderer.frameCount % settings.updateRate == 0
+        
+        if (updateFrame) {
             computeEncoder.setComputePipelineState(ComputePiplines.updateCells)
             computeEncoder.setTexture(Textures.data, index: DataTextureIndex.rawValue)
             computeEncoder.setTexture(Textures.tempOutput, index: TempOutputIndex.rawValue)
@@ -66,7 +70,11 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
             print("Failed to create blit encoder")
             return
         }
-        blitEncoder.copy(from: Textures.tempOutput, to: Textures.data)
+        if (updateFrame) {
+            blitEncoder.copy(from: Textures.tempOutput, to: Textures.data)
+        } else {
+            blitEncoder.copy(from: Textures.data, to: Textures.tempOutput)
+        }
         
         blitEncoder.endEncoding()
         
@@ -112,8 +120,8 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
         
         let from = texturePoint(from: viewPoint, texture: Textures.data, drawable: mtkView)
         let to = texturePoint(from: CGPoint(x: viewPoint.x + event.deltaX, y: viewPoint.y + event.deltaY), texture: Textures.data, drawable: mtkView)
-        strokes.append((from, to))
-        print("\(from), \(to)")
+        let isRightClick: UInt8 = event.type == NSEvent.EventType.rightMouseDown ? 0 : 1
+        strokes.append(StrokeData(from: from, to: to, rightClickMask: isRightClick))
     }
     
     func mouseUp(with event: NSEvent) {
@@ -126,6 +134,29 @@ class Renderer: NSObject, MTKViewDelegate, MouseTrackingDelegate {
     
     func mouseExited(with event: NSEvent) {
         
+    }
+    
+    func keyUp(with event: NSEvent) {
+        
+    }
+    
+    func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 49:
+            if (settings.state == Running) {
+                settings.state = Paused
+            } else {
+                settings.state = Running
+            }
+        case 125:
+            settings.updateRate += 1
+        case 126:
+            if (settings.updateRate > 1) {
+                settings.updateRate -= 1
+            }
+        default:
+            return
+        }
     }
     
     func texturePoint(from viewPoint: CGPoint, texture: MTLTexture, drawable: MTKView) -> simd_float2 {
