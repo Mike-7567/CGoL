@@ -98,6 +98,7 @@ class Renderer: NSObject, MTKViewDelegate, InputDelegate {
         Renderer.frameCount += 1
     }
     
+    #if os(macOS)
     func mouseDown(with event: NSEvent) {
         
     }
@@ -118,8 +119,8 @@ class Renderer: NSObject, MTKViewDelegate, InputDelegate {
             return
         }
         
-        let from = texturePoint(from: viewPoint, texture: Textures.data, drawable: mtkView)
-        let to = texturePoint(from: CGPoint(x: viewPoint.x + event.deltaX, y: viewPoint.y + event.deltaY), texture: Textures.data, drawable: mtkView)
+        let from = texturePoint(from: viewPoint, texture: Textures.data, drawable: mtkView, ios: false)
+        let to = texturePoint(from: CGPoint(x: viewPoint.x + event.deltaX, y: viewPoint.y + event.deltaY), texture: Textures.data, drawable: mtkView, ios: false)
         let isRightClick: UInt8 = event.type == NSEvent.EventType.rightMouseDown ? 0 : 1
         strokes.append(StrokeData(from: from, to: to, rightClickMask: isRightClick))
     }
@@ -158,15 +159,74 @@ class Renderer: NSObject, MTKViewDelegate, InputDelegate {
             return
         }
     }
+    #elseif os(iOS)
     
-    func texturePoint(from viewPoint: CGPoint, texture: MTLTexture, drawable: MTKView) -> simd_float2 {
+    func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if (touches.count > 1) {
+            return
+        }
+            
+        let touch = touches.first
+        
+        guard let mtkView = touch?.view as? MTKView else {
+            print("View was not a MTKView: \(type(of: touch?.view))")
+            return
+        }
+        
+        guard var toLocation = touch?.location(in: mtkView) else {
+            print("Could not get current location")
+            return
+        }
+        
+        toLocation = toLocation * mtkView.contentScaleFactor
+        
+        guard var prevLocation = touch?.previousLocation(in: mtkView) else {
+            print("Could not get previous location")
+            return
+        }
+        
+        prevLocation = prevLocation * mtkView.contentScaleFactor
+        
+        guard let currentPoint = mtkView.convert(toLocation, from: nil) as CGPoint? else {
+            print("Could not get start point")
+            return
+        }
+        
+        guard let prevPoint = mtkView.convert(prevLocation, from: nil) as CGPoint? else {
+            print("Could not get end point")
+            return
+        }
+        
+        let from = texturePoint(from: currentPoint, texture: Textures.data, drawable: mtkView, ios: true)
+        let to = texturePoint(from: prevPoint, texture: Textures.data, drawable: mtkView, ios: true)
+        strokes.append(StrokeData(from: from, to: to, rightClickMask: 0))
+    }
+    
+    func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+    }
+    
+    func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+    }
+    
+    #endif
+    
+    func texturePoint(from viewPoint: CGPoint, texture: MTLTexture, drawable: MTKView, ios: Bool) -> simd_float2 {
         let viewSize = drawable.drawableSize
         let texWidth  = Float(texture.width)
         let texHeight = Float(texture.height)
 
-        let u = Float(viewPoint.x) / Float(viewSize.width) * 2
-        let v = Float(viewPoint.y) / Float(viewSize.height) * 2
-        
-        return simd_float2(u * texWidth, v * texHeight)
+        if (ios) {
+            let u = Float(viewPoint.x) / Float(viewSize.width)
+            let v = (1.0 - Float(viewPoint.y) / Float(viewSize.height))
+            
+            return simd_float2(u * texWidth, v * texHeight)
+        } else {
+            let u = Float(viewPoint.x) / Float(viewSize.width) * 2
+            let v = Float(viewPoint.y) / Float(viewSize.height) * 2
+            
+            return simd_float2(u * texWidth, v * texHeight)
+        }
     }
 }

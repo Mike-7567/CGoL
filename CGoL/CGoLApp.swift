@@ -8,7 +8,11 @@
 import SwiftUI
 import simd
 
-let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(750, 500), state: Running, updateRate: 2, strokeSize: 3.0)
+#if os(macOS)
+let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(1920, 1080), state: Running, updateRate: 2, strokeSize: 3.0)
+#elseif os(iOS)
+let DEFAULT_SETTINGS = SettingsStruct(dataTextureSize: simd_int2(200, 500), state: Running, updateRate: 2, strokeSize: 3.0)
+#endif
 
 @main
 struct CGoLApp: App {
@@ -20,6 +24,7 @@ struct CGoLApp: App {
         Textures.initialize(size: settings.dataTextureSize)
     }
     
+    #if os(macOS)
     var body: some Scene {
         WindowGroup {
             ContentView(settings: $settings)
@@ -28,4 +33,18 @@ struct CGoLApp: App {
             SettingsView(settings: $settings)
         }
     }
+    #elseif os(iOS)
+    var body: some Scene {
+        WindowGroup {
+            TabView {
+                Tab("Game", systemImage: "gamecontroller") {
+                    ContentView(settings: $settings)
+                }
+                Tab("Settings", systemImage: "gear") {
+                    SettingsView(settings: $settings)
+                }
+            }
+        }
+    }
+    #endif
 }

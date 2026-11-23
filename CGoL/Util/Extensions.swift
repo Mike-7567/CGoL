@@ -31,3 +31,15 @@ extension MTLRenderCommandEncoder {
         self.setFragmentTexture(texture, index: Int(index))
     }
 }
+
+extension CGFloat {
+    func float() -> Float {
+        return Float(self)
+    }
+}
+
+extension CGPoint {
+    static func *(left: CGPoint, right: CGFloat) -> CGPoint {
+        return CGPoint(x: left.x * right, y: left.y * right)
+    }
+}

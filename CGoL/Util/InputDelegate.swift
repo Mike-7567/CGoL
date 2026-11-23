@@ -6,6 +6,9 @@
 //
 
 import Foundation
+
+#if os(macOS)
+
 import AppKit
 
 protocol InputDelegate {
@@ -23,3 +26,19 @@ protocol InputDelegate {
     
     func keyDown(with event: NSEvent)
 }
+
+#elseif os(iOS)
+
+import UIKit
+
+protocol InputDelegate {
+    func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
+    
+    func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
+    
+    func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
+}
+
+#endif
+
+

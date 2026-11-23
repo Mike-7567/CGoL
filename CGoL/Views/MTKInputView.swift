@@ -8,10 +8,12 @@
 import MetalKit
 
 class MTKInputView: MTKView {
+    var inputDelegate: InputDelegate?
+    
+    #if os(macOS)
     override var acceptsFirstResponder: Bool {
         return true
     }
-    var inputDelegate: InputDelegate?
     
     override func mouseDown(with event: NSEvent) {
         guard let delegate = inputDelegate else {
@@ -69,4 +71,28 @@ class MTKInputView: MTKView {
     override func viewDidMoveToWindow() {
         becameKeyView()
     }
+    #elseif os(iOS)
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if (inputDelegate != nil) {
+            inputDelegate?.touchesMoved(touches, with: event)
+        }
+        super.touchesMoved(touches, with: event)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if (inputDelegate != nil) {
+            inputDelegate?.touchesBegan(touches, with: event)
+        }
+        super.touchesBegan(touches, with: event)
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if (inputDelegate != nil) {
+            inputDelegate?.touchesEnded(touches, with: event)
+        }
+        super.touchesEnded(touches, with: event)
+    }
+    
+    #endif
 }
